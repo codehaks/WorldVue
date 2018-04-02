@@ -1,3 +1,164 @@
-﻿
-<h2>Welcome to my App</h2>
+﻿@{
+    ViewData["Title"] = "Countries";
+}
+
+<style>
+    th {
+        cursor: pointer;
+    }
+</style>
+
+<h2>@ViewData["Title"] </h2>
 <hr />
+
+<div id="app">
+
+    <div class="row">
+        <div class=" col-sm-4">
+            <div class="input-group">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search for..." v-model="searchTerm" v-on:keyup.prevent="searchList">
+                    </div>
+                    <button class="btn btn-default" type="button" v-on:click.prevent="searchList">
+                        <i class="fa fa-search"></i>
+                    </button>
+
+                    <button class="btn btn-default" type="button" v-on:click="refreshList">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <select v-model="selectedContinent" class="form-control" v-on:click="filterByContinet">
+                <option v-for="item in continents">
+                    {{ item}}
+                </option>
+            </select>
+        </div>
+    </div>
+    <table class="table table-condensed table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th v-on:click="sortByParam('countryName')">Name <i v-bind:class="getOrderArrow('countryName')"></i></th>
+                <th v-on:click="sortByParam('capital')">Capital <i v-bind:class="getOrderArrow('capital')"></i></th>
+                <th v-on:click="sortByParam('continentName')">Continent <i v-bind:class="getOrderArrow('continentName')"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="(country,index) in countryList">
+                <td>{{index+1}}</td>
+                <td>{{country.countryName}}</td>
+                <td>{{country.capital}}</td>
+                <td>{{country.continentName}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@section scripts{
+
+    <script src="~/lib/vue/vue.min.js"></script>
+    <script src="~/lib/lodash.js/lodash.min.js"></script>
+
+    <script>
+        var app = new Vue({
+            el: "#app",
+            data: {
+                countryList: [],
+                sortParam: null,
+                orderParam: "asc",
+                searchTerm: null,
+                tempList: [],
+                continents: [],
+                selectedContinent: null
+            },
+            created: function () {
+                this.getList();
+            },
+            methods: {
+                filterByContinet: function () {
+                    var vm = this;
+                    if (vm.selectedContinent == "All" || vm.selectedContinent == null) {
+                        vm.countryList = vm.tempList;
+                        return;
+                    }
+                    vm.countryList = _.filter(vm.tempList, function (u) {
+                        return u.continentName == vm.selectedContinent;
+                    });
+                },
+                refreshList: function () {
+                    var vm = this;
+                    vm.searchTerm = "";
+                    vm.countryList = vm.tempList;
+                },
+                searchList: function () {
+                    var vm = this;
+
+                    if (vm.searchTerm.length > 1) {
+                        vm.countryList = _.filter(vm.countryList, function (u) {
+                            var found = u.countryName.toLowerCase().includes(vm.searchTerm) || u.capital.toLowerCase().includes(vm.searchTerm)
+                            return found;
+                        });
+                    } else {
+                        vm.countryList = vm.tempList;
+                    }
+
+                },
+
+                getOrderArrow: function (param) {
+
+                    if (param == this.sortParam) {
+                        switch (this.orderParam) {
+                            case "asc":
+                                return "fw fa fa-1x fa-angle-down ";
+                                break;
+                            case "des":
+                                return "fw fa fa-1x fa-angle-up";
+                                break;
+                            default:
+                        }
+                    }
+
+                },
+                sortByParam: function (param) {
+                    var vm = this;
+                    vm.sortParam = param;
+                    vm.countryList = _.sortBy(vm.countryList, [param]);
+
+                    if (vm.orderParam == "asc") {
+
+                        vm.orderParam = "des"
+                    } else {
+                        vm.countryList = _.reverse(vm.countryList);
+                        vm.orderParam = "asc"
+                    }
+
+                },
+
+                getList: function () {
+                    var vm = this;
+                    $.ajax({ url: "/worlddata.json", method: "GET" })
+                        .done(function (data) {
+                            vm.countryList = data;
+                            vm.tempList = data;
+
+                            var allContinents = _.map(vm.countryList, function (item) {
+                                return item.continentName;
+                            });
+                            vm.continents = _.uniq(allContinents);
+                            vm.continents.splice(0, 0, "All");
+
+                        }).fail(function () {
+
+                        }).always(function () {
+
+                        });
+                }
+            }
+        });
+    </script>
+
+}
