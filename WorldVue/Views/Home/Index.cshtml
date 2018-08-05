@@ -45,14 +45,18 @@
                 <th v-on:click="sortByParam('countryName')">Name <i v-bind:class="getOrderArrow('countryName')"></i></th>
                 <th v-on:click="sortByParam('capital')">Capital <i v-bind:class="getOrderArrow('capital')"></i></th>
                 <th v-on:click="sortByParam('continentName')">Continent <i v-bind:class="getOrderArrow('continentName')"></i></th>
+                <th v-on:click="sortByParam('population')">Population <i v-bind:class="getOrderArrow('population')"></i></th>
+                <th v-on:click="sortByParam('areaInSqKm')">Area(km) <i v-bind:class="getOrderArrow('areaInSqKm')"></i></th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="(country,index) in countryList">
                 <td>{{index+1}}</td>
-                <td>{{country.countryName}}</td>
+                <td><a v-bind:href="'https://en.wikipedia.org/wiki/'+country.countryName" target="_blank">{{country.countryName}}</a> </td>
                 <td>{{country.capital}}</td>
                 <td>{{country.continentName}}</td>
+                <td>{{country.population}}</td>
+                <td>{{country.areaInSqKm}}</td>
             </tr>
         </tbody>
     </table>
